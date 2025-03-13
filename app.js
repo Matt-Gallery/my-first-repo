@@ -1,3 +1,4 @@
+/*-------------------------------- Constants --------------------------------*/
 const deck = [
   { value: "7", suit: "♥" },
   { value: "8", suit: "♥" },
@@ -33,13 +34,17 @@ const deck = [
   { value: "A", suit: "♠" },
 ];
 
+const cardRanks = {
+  '7': 1, '8': 2, '9': 3, '10': 4, 'J': 5, 'Q': 6, 'K': 7, 'A': 8
+};
+/*---------------------------- Variables (state) ----------------------------*/
 let playerHands = {
   player1: [],
   player2: [],
   player3: [],
   player4: [],
 };
-
+/*------------------------------- Functions -------------------------------*/
 function dealCards() {
   if (playerHands.player1.length !== 0) {
     return;
@@ -63,8 +68,9 @@ function dealCards() {
   }
 }
 dealCards();
-
+/*-------------------------------- Functions --------------------------------*/
 //Perplexity AI
+/*------ Sort Player Hands by most cards in suit then low to high -----------*/
 function sortPlayerHands(playerHands) {
 // Define a helper function to get the rank of a card value
 const cardRank = (value) => {
@@ -101,7 +107,8 @@ for (let player in playerHands) {
 // Call the function to sort player hands
 sortPlayerHands(playerHands);
 console.log(playerHands);
-// Perplexity AI
+
+/*------ Count the numnber of cards of each suit in each players hand -------*/
 function countPlayerSuits(playerHands) {
 const result = {};
 for (const [player, cards] of Object.entries(playerHands)) {
@@ -148,6 +155,7 @@ return {
 const result = findSuitsWithMostElements(playerHands);
 console.log('Suits with most elements:', result);
 
+/*---- Player 2 plays first card - lowest card of the suit they have the most of -----*/
 function findLowestCardFromMostCommonSuits(playerHands) {
 const player2Cards = playerHands.player2;
 
@@ -187,10 +195,7 @@ for (const card of player2Cards) {
     }
   }
 }
-
 return {
-  suits: suitsWithMostElements,
-  count: maxCount,
   lowestCard: lowestCard
 };
 }
@@ -199,6 +204,7 @@ return {
 const firstPlay = findLowestCardFromMostCommonSuits(playerHands);
 console.log('Result:', firstPlay);
 
+/*---- Remove the first card that Player 2 played from their hand -----*/
 function removeCardFromPlayer2Hand(playerHands, firstPlay) {
 
 const player2Hand = playerHands.player2;
@@ -218,31 +224,100 @@ if (index !== -1) {
 removeCardFromPlayer2Hand(playerHands, firstPlay);
 console.log("Updated player2 hand:", playerHands.player2);
 
-function selectLowestCardSameSuit(playerHands, firstPlay) {
-const player3Hand = playerHands.player3;
-const firstPlaySuit = firstPlay.lowestCard.suit;
+/*---- Player 3 plays first card - the lowest card of the same suit that player 2 played,
+  else their highest card -----*/
+function selectCardFromPlayer3(playerHands, firstPlay) {
+  const player3Cards = playerHands.player3;
+  const targetSuit = firstPlay.lowestCard.suit;
 
-// Filter cards of the same suit
-const sameSuitCards = player3Hand.filter(card => card.suit === firstPlaySuit);
+  // Define card ranks
+  const cardRanks = {
+    '7': 1, '8': 2, '9': 3, '10': 4, 'J': 5, 'Q': 6, 'K': 7, 'A': 8
+  };
 
-if (sameSuitCards.length === 0) {
-  console.log("Player 3 has no cards of the same suit");
-  return null;
+  // Filter cards with the same suit
+  const sameRankCards = player3Cards.filter(card => card.suit === targetSuit);
+
+  if (sameRankCards.length > 0) {
+    // Find the lowest card of the same suit
+    return sameRankCards.reduce((lowest, current) => 
+      cardRanks[current.value] < cardRanks[lowest.value] ? current : lowest
+    );
+  } else {
+    // If no matching suit, return the highest value card
+    return player3Cards.reduce((highest, current) => 
+      cardRanks[current.value] > cardRanks[highest.value] ? current : highest
+    );
+  }
 }
 
-// Find the lowest ranked card
-const lowestCard = sameSuitCards.reduce((lowest, current) => {
-  if (cardRanks[current.value] < cardRanks[lowest.value]) {
-    return current;
-  }
-  return lowest;
-});
+const player3Card = selectCardFromPlayer3(playerHands, firstPlay);
+console.log('Player 3 selected card:', player3Card);
 
-return lowestCard;
+/*---- Remove the first card that Player 3 played from their hand -----*/
+// Example usage:
+function removeCardFromPlayer3Hand(playerHands, player3Card) {
+  const player3Hand = playerHands.player3;
+  
+  const index = player3Hand.findIndex(card => 
+    card.value === player3Card.value && card.suit === player3Card.suit
+  );
+
+  if (index !== -1) {
+    player3Hand.splice(index, 1);
+    console.log(`Removed card: ${player3Card.value}${player3Card.suit} from Player 3's hand`);
+  }
 }
 
 // Example usage:
-// Assuming firstPlay is defined, e.g.:
-// const firstPlay = { value: "9", suit: "♥" };
-const selectedCard = selectLowestCardSameSuit(playerHands, firstPlay);
-console.log("Selected card:", selectedCard);
+removeCardFromPlayer3Hand(playerHands, player3Card);
+console.log("Updated player3 hand:", playerHands.player3);
+
+/*---- Player 4 plays first card - the lowest card of the same suit that player 2 played,
+  else their highest card -----*/
+function selectCardFromPlayer4(playerHands, firstPlay) {
+  const player4Cards = playerHands.player4;
+  const targetSuit = firstPlay.lowestCard.suit;
+
+  // Define card ranks
+  const cardRanks = {
+    '7': 1, '8': 2, '9': 3, '10': 4, 'J': 5, 'Q': 6, 'K': 7, 'A': 8
+  };
+
+  // Filter cards with the same suit
+  const sameRankCards = player4Cards.filter(card => card.suit === targetSuit);
+
+  if (sameRankCards.length > 0) {
+    // Find the lowest card of the same suit
+    return sameRankCards.reduce((lowest, current) => 
+      cardRanks[current.value] < cardRanks[lowest.value] ? current : lowest
+    );
+  } else {
+    // If no matching suit, return the highest value card
+    return player4Cards.reduce((highest, current) => 
+      cardRanks[current.value] > cardRanks[highest.value] ? current : highest
+    );
+  }
+}
+const player4Card = selectCardFromPlayer4(playerHands, firstPlay);
+console.log('Player 4 selected card:', player4Card);
+
+/*---- Remove the first card that Player 4 played from their hand -----*/
+
+function removeCardFromPlayer4Hand(playerHands, player4Card) {
+  const player4Hand = playerHands.player4;
+  
+  const index = player4Hand.findIndex(card => 
+    card.value === player4Card.value && card.suit === player4Card.suit
+  );
+
+  if (index !== -1) {
+    player4Hand.splice(index, 1);
+    console.log(`Removed card: ${player4Card.value}${player4Card.suit} from Player 4's hand`);
+  }
+}
+
+// Example usage:
+removeCardFromPlayer4Hand(playerHands, player4Card);
+console.log("Updated player4 hand:", playerHands.player4);
+
